@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		DBE8D6D821ABB985002AD956 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE8D6D721ABB985002AD956 /* main.swift */; };
+		DBE8D6E021ABE54A002AD956 /* ColorConversions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DBE8D6DE21ABE54A002AD956 /* ColorConversions.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,6 +26,8 @@
 /* Begin PBXFileReference section */
 		DBE8D6D421ABB985002AD956 /* BrickMosaicCL */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = BrickMosaicCL; sourceTree = BUILT_PRODUCTS_DIR; };
 		DBE8D6D721ABB985002AD956 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		DBE8D6DE21ABE54A002AD956 /* ColorConversions.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ColorConversions.cpp; sourceTree = "<group>"; };
+		DBE8D6DF21ABE54A002AD956 /* ColorConversions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ColorConversions.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +61,8 @@
 			isa = PBXGroup;
 			children = (
 				DBE8D6D721ABB985002AD956 /* main.swift */,
+				DBE8D6DE21ABE54A002AD956 /* ColorConversions.cpp */,
+				DBE8D6DF21ABE54A002AD956 /* ColorConversions.hpp */,
 			);
 			path = BrickMosaicCL;
 			sourceTree = "<group>";
@@ -94,6 +99,7 @@
 				TargetAttributes = {
 					DBE8D6D321ABB985002AD956 = {
 						CreatedOnToolsVersion = 10.1;
+						LastSwiftMigration = 1010;
 					};
 				};
 			};
@@ -120,6 +126,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DBE8D6D821ABB985002AD956 /* main.swift in Sources */,
+				DBE8D6E021ABE54A002AD956 /* ColorConversions.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -244,9 +251,16 @@
 		DBE8D6DC21ABB985002AD956 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 982SVPBAJ7;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 4.2;
 			};
 			name = Debug;
@@ -254,8 +268,14 @@
 		DBE8D6DD21ABB985002AD956 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 982SVPBAJ7;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.2;
 			};
