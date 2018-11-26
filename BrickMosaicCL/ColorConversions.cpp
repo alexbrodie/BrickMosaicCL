@@ -8,14 +8,17 @@
 
 #include "ColorConversions.hpp"
 
+#include <algorithm>
 #include <cmath>
 
-uint8_t GetGrayscaleValue(uint8_t r, uint8_t g, uint8_t b)
+using namespace std;
+
+uint8_t GetGrayscaleValue(uint8_t red, uint8_t green, uint8_t blue)
 {
     return static_cast<uint8_t>((
-           (static_cast<int>(r) * 299) +
-           (static_cast<int>(g) * 587) +
-           (static_cast<int>(b) * 114)
+           (static_cast<int>(red)   * 299) +
+           (static_cast<int>(green) * 587) +
+           (static_cast<int>(blue)  * 114)
        ) / 1000);
 }
 
@@ -49,54 +52,146 @@ double XyzToFxyz(double xyz)
     }
 }
 
-void RgbToXyz(uint8_t r, uint8_t g, uint8_t b, double &X, double &Y, double &Z)
+void RgbToXyz(uint8_t red, uint8_t green, uint8_t blue, double &x, double &y, double &z)
 {
     // sRGB to Linear RGB
-    double rLin = StandardToLinearAsNorm(r);
-    double gLin = StandardToLinearAsNorm(g);
-    double bLin = StandardToLinearAsNorm(b);
+    double rLin = StandardToLinearAsNorm(red);
+    double gLin = StandardToLinearAsNorm(green);
+    double bLin = StandardToLinearAsNorm(blue);
     
     // Linear RGB to XYZ
-    X = ((rLin * 0.4124) + (gLin * 0.3576) + (bLin * 0.1805));  // 0 to 0.9505
-    Y = ((rLin * 0.2126) + (gLin * 0.7152) + (bLin * 0.0722));  // 0 to 1
-    Z = ((rLin * 0.0193) + (gLin * 0.1192) + (bLin * 0.9505));  // 0 to 1.089
+    x = ((rLin * 0.4124) + (gLin * 0.3576) + (bLin * 0.1805));  // 0 to 0.9505
+    y = ((rLin * 0.2126) + (gLin * 0.7152) + (bLin * 0.0722));  // 0 to 1
+    z = ((rLin * 0.0193) + (gLin * 0.1192) + (bLin * 0.9505));  // 0 to 1.089
 }
 
-void XyzToLab(double x, double y, double z, int &L, int &A, int &B)
+void XyzToLab(double x, double y, double z, int &l, int &a, int &b)
 {
     double fx = XyzToFxyz(x);
     double fy = XyzToFxyz(y);
     double fz = XyzToFxyz(z);
     
-    L = static_cast<int>((116.0 * fy) - 16.0);
-    A = static_cast<int>(500.0 * (fx - fy));
-    B = static_cast<int>(200.0 * (fy - fz));
+    l = static_cast<int>((116.0 * fy) - 16.0);
+    a = static_cast<int>(500.0 * (fx - fy));
+    b = static_cast<int>(200.0 * (fy - fz));
 }
 
-void RgbToLab(uint8_t r, uint8_t g, uint8_t b, int &L, int &A, int &B)
+void RgbToLab(uint8_t red, uint8_t green, uint8_t blue, int &l, int &a, int &b)
 {
     double x, y, z;
-    RgbToXyz(r, g, b, x, y, z);
-    XyzToLab(x, y, z, L, A, B);
+    RgbToXyz(red, green, blue, x, y, z);
+    XyzToLab(x, y, z, l, a, b);
 }
 
-void RgbToYcrcb(uint8_t r, uint8_t g, uint8_t b, int &Y, int &Cr, int &Cb)
+void RgbToYcrcb(uint8_t red, uint8_t green, uint8_t blue, int &y, int &cr, int &cb)
 {
-    Y  = (((static_cast<int>(r) * 76) + (static_cast<int>(g) * 150) + (static_cast<int>(b) * 28)) / 256);
-    Cr = (((static_cast<int>(r) * 128) - (static_cast<int>(g) * -107) - (static_cast<int>(b) * -20) + 32768) / 256);
-    Cb = (((static_cast<int>(r) * -43) - (static_cast<int>(g) * -84) + (static_cast<int>(b) * 128) + 32768) / 256);
+    y  = (((static_cast<int>(red) *  76) + (static_cast<int>(green) *  150) + (static_cast<int>(blue) *  28)) / 256);
+    cr = (((static_cast<int>(red) * 128) - (static_cast<int>(green) * -107) - (static_cast<int>(blue) * -20) + 32768) / 256);
+    cb = (((static_cast<int>(red) * -43) - (static_cast<int>(green) *  -84) + (static_cast<int>(blue) * 128) + 32768) / 256);
 }
 
-void RgbToYiq(uint8_t r, uint8_t g, uint8_t b, int &Y, int &I, int &Q)
+void RgbToYiq(uint8_t red, uint8_t green, uint8_t blue, int &y, int &i, int &q)
 {
-    Y = (((static_cast<int>(r) * 299) + (static_cast<int>(g) * 587) + (static_cast<int>(b) * 114) + 500) / 1000);
-    I = (((static_cast<int>(r) * 596) - (static_cast<int>(g) * 274) - (static_cast<int>(b) * 322) + 500) / 1000);
-    Q = (((static_cast<int>(r) * 212) - (static_cast<int>(g) * 523) + (static_cast<int>(b) * 311) + 500) / 1000);
+    y = (((static_cast<int>(red) * 299) + (static_cast<int>(green) * 587) + (static_cast<int>(blue) * 114) + 500) / 1000);
+    i = (((static_cast<int>(red) * 596) - (static_cast<int>(green) * 274) - (static_cast<int>(blue) * 322) + 500) / 1000);
+    q = (((static_cast<int>(red) * 212) - (static_cast<int>(green) * 523) + (static_cast<int>(blue) * 311) + 500) / 1000);
 }
 
-void YiqToRgb(int y, int i, int q, uint8_t &R, uint8_t &G, uint8_t &B)
+void YiqToRgb(int y, int i, int q, uint8_t &red, uint8_t &green, uint8_t &blue)
 {
-    R = ClampToByte(((y * 1000) + (i * 956)  + (q * 621)  + 500) / 1000);
-    G = ClampToByte(((y * 1000) - (i * 272)  - (q * 647)  + 500) / 1000);
-    B = ClampToByte(((y * 1000) - (i * 1105) + (q * 1702) + 500) / 1000);
+    red   = ClampToByte(((y * 1000) + (i * 956)  + (q * 621)  + 500) / 1000);
+    green = ClampToByte(((y * 1000) - (i * 272)  - (q * 647)  + 500) / 1000);
+    blue  = ClampToByte(((y * 1000) - (i * 1105) + (q * 1702) + 500) / 1000);
+}
+
+void RgbToHsl(uint8_t red, uint8_t green, uint8_t blue, int &hue, int &saturation, int &luminosity)
+{
+    int nMin = min(red, min(green, blue));
+    int nMax = max(red, max(green, blue));
+    
+    if (nMin == nMax)
+    {
+        // Grayscale (no saturation)
+        hue = 0;
+        saturation = 0;
+        luminosity = nMin;
+    }
+    else
+    {
+        // There's some color
+        int h1, h2;
+        if (red == nMax)
+        {
+            h1 = 0;
+            h2 = green - blue;
+        }
+        else if (green == nMax)
+        {
+            h1 = 0x55;
+            h2 = blue - red;
+        }
+        else
+        {
+            h1 = 0xaa;
+            h2 = red - green;
+        }
+        
+        h1 += (0x2b * h2) / (nMax - nMin);
+        if (h1 < 0)
+        {
+            h1 += 0xff;
+        }
+
+        hue = h1;
+        luminosity = (nMin + nMax) / 2;
+        saturation = ((nMax - nMin) * 0xff) / ((luminosity & 0x80) ? (0x1fe - nMax - nMin) : (nMax + nMin));
+    }
+}
+
+uint8_t HueToColor(int m1, int m2, int h)
+{
+    if (h < 0)
+    {
+        h += 0xff;
+    }
+    else if (0xff < h)
+    {
+        h -= 0xff;
+    }
+    
+    int nRet;
+    if ((2 * h) < 0x100)
+    {
+        if ((6 * h) < 0x100)
+        {
+            nRet = m1 + ((m2 - m1) * h) / 0x2b;
+        }
+        else
+        {
+            nRet = m2;
+        }
+    }
+    else
+    {
+        if ((3 * h) < 0x1ff)
+        {
+            nRet = m1 + ((m2 - m1) * (0xaa - h)) / 0x2b;
+        }
+        else
+        {
+            nRet = m1;
+        }
+    }
+    
+    return ClampToByte(nRet);
+}
+
+void HslToRgb(int hue, int saturation, int luminosity, uint8_t &red, uint8_t &green, uint8_t &blue)
+{
+    int m2 = ((luminosity & 0x80) ? (luminosity + saturation - ((luminosity * saturation) / 0xff)) : ((luminosity * (0xff + saturation)) / 0xff));
+    int m1 = (2 * luminosity) - m2;
+    
+    red   = HueToColor(m1, m2, hue + 0x55);
+    green = HueToColor(m1, m2, hue);
+    blue  = HueToColor(m1, m2, hue - 0x55);
 }

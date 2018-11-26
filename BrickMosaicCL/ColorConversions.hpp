@@ -24,8 +24,9 @@ uint8_t StandardToLinearAsByte(uint8_t by);
 void RgbToLab(uint8_t r, uint8_t g, uint8_t b, int &L, int &A, int &B);
 void RgbToYcrcb(uint8_t r, uint8_t g, uint8_t b, int &Y, int &Cr, int &Cb);
 
-void RgbToYiq(uint8_t r, uint8_t g, uint8_t b, int &Y, int &I, int &Q);
-void YiqToRgb(int y, int i, int q, uint8_t &R, uint8_t &G, uint8_t &B);
+void RgbToYiq(uint8_t r, uint8_t g, uint8_t b, int &y, int &i, int &q);
+void YiqToRgb(int y, int i, int q, uint8_t &r, uint8_t &g, uint8_t &b);
 
+void RgbToHsl(uint8_t r, uint8_t g, uint8_t b, int &h, int &s, int &l);
 
 #endif /* ColorConversions_hpp */
