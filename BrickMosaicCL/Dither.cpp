@@ -17,16 +17,28 @@
 
 using namespace std;
 
-template <typename T> class TripleT : public tuple<T, T, T>
+template <typename T> class Triple : public tuple<T, T, T>
 {
 public:
-    TripleT() = default;
-    TripleT(T a, T b, T c);
+    Triple() = default;
+    Triple(T a, T b, T c);
 
+    Triple& operator+=(const Triple& other);
+    Triple& operator-=(const Triple& other);
+    Triple& operator*=(const Triple& other);
+    Triple& operator/=(const Triple& other);
     
-};
+    Triple operator+(const Triple& other) const;
+    Triple operator-(const Triple& other) const;
+    Triple operator*(const Triple& other) const;
+    Triple operator/(const Triple& other) const;
+    
+    template <typename U> Triple operator+(U other) const;
+    template <typename U> Triple operator-(U other) const;
+    template <typename U> Triple operator*(U other) const;
+    template <typename U> Triple operator/(U other) const;
 
-using Triple = TripleT<int>;
+};
 
 //using Triple = tuple<int, int, int>;
 
@@ -96,7 +108,7 @@ static const DitherDefinition *ditherTypeToDefinition[] =
 };
 
 
-Triple ConvertRgbToColorSpace(
+Triple<int> ConvertRgbToColorSpace(
     DitherColorSpace colorSpace,
     uint8_t red,
     uint8_t green,
@@ -106,50 +118,51 @@ Triple ConvertRgbToColorSpace(
     {
     case DitherColorSpace::RGB:
     {
-        return Triple(red, green, blue);
+        return Triple<int>(red, green, blue);
     }
     case DitherColorSpace::LinearRGB:
     {
-        return Triple(StandardToLinearAsByte(red),
-                          StandardToLinearAsByte(green),
-                          StandardToLinearAsByte(blue));
+        return Triple<int>(StandardToLinearAsByte(red),
+                            StandardToLinearAsByte(green),
+                            StandardToLinearAsByte(blue));
     }
     case DitherColorSpace::YIQ:
     {
         int y, i, q;
         RgbToYiq(red, green, blue, y, i, q);
-        return Triple(y, i, q);
+        return Triple<int>(y, i, q);
     }
     case DitherColorSpace::XYZ:
     {
         double x, y, z;
         RgbToXyz(red, green, blue, x, y, z);
-        return Triple(ClampToByte(x * 255.999),
-                          ClampToByte(y * 255.999),
-                          ClampToByte(z * 255.999));
+        return Triple<int>(ClampToByte(x * 255.999),
+                            ClampToByte(y * 255.999),
+                            ClampToByte(z * 255.999));
     }
     case DitherColorSpace::LAB:
     {
         int l, a, b;
         RgbToLab(red, green, blue, l, a, b);
-        return Triple(l, a, b);
+        return Triple<int>(l, a, b);
     }
     case DitherColorSpace::YCrCb:
     {
         int y, cr, cb;
         RgbToYcrcb(red, green, blue, y, cr, cb);
-        return Triple(y, cr, cb);
+        return Triple<int>(y, cr, cb);
     }
     default:
         assert(!"Unexpected color space");
-        return Triple(255, 0, 255);  // hopefully noticable
+        return Triple<int>(255, 0, 255);  // hopefully noticable
     }
 }
 
 
-bool Dither(
+void Dither(
     DitherType type,
     DitherColorSpace colorSpace,
+    const vector<Triple<uint8_t>> &rgbPalette,
     uint8_t *pixels,
     int width,
     int height,
@@ -160,7 +173,7 @@ bool Dither(
     const DitherDefinition dither = *ditherTypeToDefinition[static_cast<int>(type)];
     
     // Pre-allocate space for error at each pixel.
-    vector<vector<Triple>> errors;
+    vector<vector<Triple<int>>> errors;
     for (int r = 0; r < dither.rows; ++r)
     {
         errors.emplace_back(width);
@@ -174,7 +187,7 @@ bool Dither(
     int errorRowIndex = 0;
     
     // Convert the acceptable colors into a color space modified palette
-    vector<Triple> adjustedPalette;
+    vector<Triple<int>> adjustedPalette;
     /* TODO!!
     palette.reserve(...);
     for (...)
@@ -193,15 +206,15 @@ bool Dither(
         for (int x = 0; x < width; ++x)
         {
             // Convert pixel RGB to target color space
-            uint8_t r; // !!TODO
-            uint8_t g; // !!TODO
-            uint8_t b; // !!TODO
-            Triple color = ConvertRgbToColorSpace(colorSpace, r, g, b);
+            uint8_t r = 0; // !!TODO
+            uint8_t g = 0; // !!TODO
+            uint8_t b = 0; // !!TODO
+            Triple<int> color = ConvertRgbToColorSpace(colorSpace, r, g, b);
             
             // Loop around area of current pixel (x, y) and compute weighted sum of errors
             // (x', y') = (x + c - C/2, y + r - R + 1)
             // for r in [0, R), and c in [0, C)
-            Triple errorAccumulator{};
+            Triple<int> errorAccumulator{};
             int errorDenominator = 0;
             for (int r = 0; r < dither.rows; ++r)
             {
@@ -215,10 +228,8 @@ bool Dither(
                         {
                             // Add weighted error for pixel (x', y') ro running total
                             int weight = dither.weights[c + r * dither.cols];
-                            Triple neighborError = errors[errorRowIndex + 42][xx]; // TODO!! 42 should be some math with r
-                            get<0>(errorAccumulator) += get<0>(neighborError) * weight;
-                            get<1>(errorAccumulator) += get<1>(neighborError) * weight;
-                            get<2>(errorAccumulator) += get<2>(neighborError) * weight;
+                            // TODO!! 42 should be some math with r
+                            errorAccumulator += errors[errorRowIndex + 42][xx] * weight;
                             errorDenominator += weight;
                         }
                     }
@@ -226,9 +237,7 @@ bool Dither(
             }
             
             // Add the weighted error average to the current pixel color
-            get<0>(color) += get<0>(errorAccumulator) / errorDenominator;
-            get<1>(color) += get<1>(errorAccumulator) / errorDenominator;
-            get<2>(color) += get<2>(errorAccumulator) / errorDenominator;
+            color += errorAccumulator / errorDenominator;
             
             // See what value in the provided colors is closest to this value
             size_t paletteIndexWithMinError = 0;
@@ -238,16 +247,20 @@ bool Dither(
                 for (size_t paletteIndex = 0; paletteIndex < adjustedPalette.size(); ++paletteIndex)
                 {
                     // Get the error for each channel if we use this color
-                    const Triple &paletteEntry = adjustedPalette[paletteIndex];
-                    int64_t err0 = get<0>(color) - get<0>(paletteEntry);
-                    int64_t err1 = get<1>(color) - get<1>(paletteEntry);
-                    int64_t err2 = get<2>(color) - get<2>(paletteEntry);
+                    auto delta = color - adjustedPalette[paletteIndex];
+                    
+                    //const Triple<int> &paletteEntry = adjustedPalette[paletteIndex];
+                    //int64_t err0 = get<0>(color) - get<0>(paletteEntry);
+                    //int64_t err1 = get<1>(color) - get<1>(paletteEntry);
+                    //int64_t err2 = get<2>(color) - get<2>(paletteEntry);
                     
                     // Put them all together. It seems to me that we should weight these
                     // just like we do when we convert to grayscale, but empirical evidence
                     // shows that this creates haloes and other bad juju. Also it doesn't work
                     // for other color spaces.
-                    int64_t error = ((err0 * err0) + (err1 * err1) + (err2 * err2));
+                    //int64_t error = ((err0 * err0) + (err1 * err1) + (err2 * err2));
+                    int error = (get<0>(delta) * get<0>(delta)) + (get<1>(delta) * get<1>(delta)) + (get<2>(delta) * get<2>(delta));
+                    // TODO!! handle overflow above
                     if (error <= minError)
                     {
                         // This is the best we've got so far
@@ -258,109 +271,39 @@ bool Dither(
             }
 
             // This is what we've picked for this coordinate
-            const Triple &paletteEntry = adjustedPalette[paletteIndexWithMinError];
+            const Triple<int> &paletteEntry = adjustedPalette[paletteIndexWithMinError];
 
             // Calculate the error of this pixel compared to desired result.
-            Triple& newError = errors[errorRowIndex][x];
-            get<0>(newError) = get<0>(color) - get<0>(paletteEntry);
-            get<1>(newError) = get<1>(color) - get<1>(paletteEntry);
-            get<2>(newError) = get<2>(color) - get<2>(paletteEntry);
+            errors[errorRowIndex][x] = color - paletteEntry;
+            //Triple<int>& newError = errors[errorRowIndex][x];
+            //get<0>(newError) = get<0>(color) - get<0>(paletteEntry);
+            //get<1>(newError) = get<1>(color) - get<1>(paletteEntry);
+            //get<2>(newError) = get<2>(color) - get<2>(paletteEntry);
             
             // And use this palette entry at this pixel
-            
-            
-            // Finally, put this color
-            pargbRow[x] =
-            (pargbAvailableColors[iColorWithMinError] & ~Gdiplus::Color::AlphaMask) |
-            (pargbRow[x] & Gdiplus::Color::AlphaMask);
-            
-            
-                /*
-                // Determine dither bounds around the already processed
-                int top    = y - dither->rows + 1;
-                int bottom = y + 1;
-                int left   = x - (dither->cols / 2);
-                int right  = left + dither->cols;
-                
-                // Need to keep track of the error denominator espcially for literal edge cases
-                int errorDenominator = 0;
-                
-                // Clamp to bounds
-                top    = max(top, 0);
-                bottom = min(bottom, height);
-                left   = max(left, 0);
-                right  = min(right, width);
-
-                 // Loop around area of current pixel (x, y) and compute weighted sum of errors
-                 Triple
-                 for (int yy = top; yy < bottom; ++yy)
-                 {
-                 for (int xx = left; xx < right; ++x)
-                 {
-                 // Add weighted error to running total
-                 double
-                 
-                 }
-                 }
-*/
-            
-            /*
-                // The (sub) bounds of dither->weights that's applicable for the current pixel (x,y)
-                // such that that whole neighborhood is in bounds. This is relative to the current
-                // pixel, i.e. a col=0, row=0 is at (x, y). Left and top are inclusive, bottom and right
-                // are exclusive.
-                int topRow = -dither->rows + 1;
-                int bottomRow = 1;
-                int leftColumn = 0;
-                int rightColumn = dither->cols;
-                
-                int rowOffset;
-                int columnOffset
-                // TODO: constrain to bounds
-              */
-            
-                // Loop aroun
-                
-                
-                // The left and right cols of the neighborhood to be included here
-                // !!TODO!! is this math right?!?
-                int leftCol  = max(0, (dither->cols / 2) - x);
-                int rightCol = min(dither->cols, ((dither->cols / 2) + (width - x)));
-                
-                // Loop over the full rows in the dither matrix
-                for (int row = max(0, (dither->rows - y - 1)); row < dither->rows; ++row)
-                {
-                    const int *ditherWeightsRow = &dither->weights[row * dither->cols];
-                    const Tripple *errorRow  = (errors[(errorRowIndex + 1 + row) % dither->rows] + x - (dither->cols / 2));
-                    for (int col = leftCol; col < rightCol; ++col)
-                    {
-                        int nDither = pnDitherRow[iCol];
-                        //if (nDither)
-                        {
-                            //nErrorDen += nDither;
-                            for (int iError = 0; iError < 3; ++iError)
-                            {
-                                triErrorNum[iError] += (nDither * ptriErrorRow[iCol][iError]);
-                            }
-                        }
-                    }
-                }
-                
-                // And add that to the weight for this pixel
-                //if (0 < nErrorDen)
-                {
-                    for (int iError = 0; iError < 3; ++iError)
-                    {
-                        // Watch out for large errors
-                        //!!!Assert(abs(nErrorNum / nErrorDen) < (nWeightRange / 2));
-                        
-                        tri[iError] += (triErrorNum[iError] / nErrorDen);
-                    }
-                }
-            }
-            
-
+            // TODO!! pixels[x][y] = rgbPalette[paletteIndexWithMinError]
         }
-        
     }
 }
+
+#if 1
+static struct Test
+{
+    Test()
+    {
+        vector<Triple<uint8_t>> colors
+        {
+            { 255, 0, 0 },
+            { 0, 255, 0 },
+        };
+        
+        Dither(DitherType::Stuki,
+               DitherColorSpace::LinearRGB,
+               colors,
+               nullptr,
+               0,
+               0,
+               0);
+    }
+} test;
+#endif
