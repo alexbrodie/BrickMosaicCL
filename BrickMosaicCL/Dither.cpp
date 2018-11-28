@@ -24,14 +24,14 @@ public:
     Triple(T a, T b, T c);
 
     Triple& operator+=(const Triple& other);
-    Triple& operator-=(const Triple& other);
-    Triple& operator*=(const Triple& other);
-    Triple& operator/=(const Triple& other);
+    //Triple& operator-=(const Triple& other);
+    //Triple& operator*=(const Triple& other);
+    //Triple& operator/=(const Triple& other);
     
-    Triple operator+(const Triple& other) const;
+    //Triple operator+(const Triple& other) const;
     Triple operator-(const Triple& other) const;
-    Triple operator*(const Triple& other) const;
-    Triple operator/(const Triple& other) const;
+    //Triple operator*(const Triple& other) const;
+    //Triple operator/(const Triple& other) const;
     
     template <typename U> Triple operator+(U other) const;
     template <typename U> Triple operator-(U other) const;
@@ -39,6 +39,53 @@ public:
     template <typename U> Triple operator/(U other) const;
 
 };
+
+template <typename T> Triple<T>::Triple(T a, T b, T c) : tuple<T, T, T>(a, b, c)
+{
+}
+
+template <typename T> Triple<T>& Triple<T>::operator+=(const Triple &other)
+{
+    get<0>(*this) += get<0>(other);
+    get<1>(*this) += get<1>(other);
+    get<2>(*this) += get<2>(other);
+    return *this;
+}
+
+template <typename T> Triple<T> Triple<T>::operator-(const Triple& other) const
+{
+    return Triple(get<0>(*this) - get<0>(other),
+                  get<1>(*this) - get<1>(other),
+                  get<2>(*this) - get<2>(other));
+}
+
+template <typename T> template <typename U> Triple<T> Triple<T>::operator+(U other) const
+{
+    return Triple(get<0>(*this) + other,
+                  get<1>(*this) + other,
+                  get<1>(*this) + other);
+}
+
+template <typename T> template <typename U> Triple<T> Triple<T>::operator-(U other) const
+{
+    return Triple(get<0>(*this) - other,
+                  get<1>(*this) - other,
+                  get<1>(*this) - other);
+}
+
+template <typename T> template <typename U> Triple<T> Triple<T>::operator*(U other) const
+{
+    return Triple(get<0>(*this) * other,
+                  get<1>(*this) * other,
+                  get<1>(*this) * other);
+}
+
+template <typename T> template <typename U> Triple<T> Triple<T>::operator/(U other) const
+{
+    return Triple(get<0>(*this) / other,
+                  get<1>(*this) / other,
+                  get<1>(*this) / other);
+}
 
 //using Triple = tuple<int, int, int>;
 
@@ -188,13 +235,11 @@ void Dither(
     
     // Convert the acceptable colors into a color space modified palette
     vector<Triple<int>> adjustedPalette;
-    /* TODO!!
-    palette.reserve(...);
-    for (...)
+    adjustedPalette.reserve(rgbPalette.size());
+    for (auto &&it : rgbPalette)
     {
-        palette.push_back(ConvertRgbToColorSpace(colorSpace, red, green, blue));
+        adjustedPalette.push_back(ConvertRgbToColorSpace(colorSpace, get<0>(it), get<1>(it), get<2>(it)));
     }
-     */
     
     // Loop over each pixel
     for (int y = 0; y < height; ++y)
@@ -205,11 +250,13 @@ void Dither(
         //!! Gdiplus::ARGB *pargbRow = reinterpret_cast<Gdiplus::ARGB*>(static_cast<BYTE*>(bd.Scan0) + (bd.Stride * y));
         for (int x = 0; x < width; ++x)
         {
+            int pixelBufferIndex = y * stride + x * 3;
+            uint8_t& rr = pixels[pixelBufferIndex + 0];
+            uint8_t& gg = pixels[pixelBufferIndex + 1];
+            uint8_t& bb = pixels[pixelBufferIndex + 2];
+
             // Convert pixel RGB to target color space
-            uint8_t r = 0; // !!TODO
-            uint8_t g = 0; // !!TODO
-            uint8_t b = 0; // !!TODO
-            Triple<int> color = ConvertRgbToColorSpace(colorSpace, r, g, b);
+            Triple<int> color = ConvertRgbToColorSpace(colorSpace, rr, gg, bb);
             
             // Loop around area of current pixel (x, y) and compute weighted sum of errors
             // (x', y') = (x + c - C/2, y + r - R + 1)
@@ -247,20 +294,14 @@ void Dither(
                 for (size_t paletteIndex = 0; paletteIndex < adjustedPalette.size(); ++paletteIndex)
                 {
                     // Get the error for each channel if we use this color
-                    auto delta = color - adjustedPalette[paletteIndex];
-                    
-                    //const Triple<int> &paletteEntry = adjustedPalette[paletteIndex];
-                    //int64_t err0 = get<0>(color) - get<0>(paletteEntry);
-                    //int64_t err1 = get<1>(color) - get<1>(paletteEntry);
-                    //int64_t err2 = get<2>(color) - get<2>(paletteEntry);
-                    
+                    Triple<int> delta = color - adjustedPalette[paletteIndex];
+                    int64_t e0 = get<0>(delta), e1 = get<1>(delta), e2 = get<2>(delta);
+
                     // Put them all together. It seems to me that we should weight these
                     // just like we do when we convert to grayscale, but empirical evidence
                     // shows that this creates haloes and other bad juju. Also it doesn't work
                     // for other color spaces.
-                    //int64_t error = ((err0 * err0) + (err1 * err1) + (err2 * err2));
-                    int error = (get<0>(delta) * get<0>(delta)) + (get<1>(delta) * get<1>(delta)) + (get<2>(delta) * get<2>(delta));
-                    // TODO!! handle overflow above
+                    int64_t error = (e0 * e0) + (e1 * e1) + (e2 * e2);
                     if (error <= minError)
                     {
                         // This is the best we've got so far
@@ -275,13 +316,12 @@ void Dither(
 
             // Calculate the error of this pixel compared to desired result.
             errors[errorRowIndex][x] = color - paletteEntry;
-            //Triple<int>& newError = errors[errorRowIndex][x];
-            //get<0>(newError) = get<0>(color) - get<0>(paletteEntry);
-            //get<1>(newError) = get<1>(color) - get<1>(paletteEntry);
-            //get<2>(newError) = get<2>(color) - get<2>(paletteEntry);
             
             // And use this palette entry at this pixel
-            // TODO!! pixels[x][y] = rgbPalette[paletteIndexWithMinError]
+            const Triple<uint8_t>& resultColor = rgbPalette[paletteIndexWithMinError];
+            rr = get<0>(resultColor);
+            gg = get<1>(resultColor);
+            bb = get<2>(resultColor);
         }
     }
 }
@@ -295,6 +335,7 @@ static struct Test
         {
             { 255, 0, 0 },
             { 0, 255, 0 },
+            { 0, 0, 255 },
         };
         
         Dither(DitherType::Stuki,
