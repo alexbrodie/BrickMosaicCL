@@ -9,6 +9,10 @@
 #ifndef Dither_hpp
 #define Dither_hpp
 
+#include <vector>
+
+template <typename T> class Triple;
+
 enum class DitherType
 {
     None,
@@ -27,15 +31,13 @@ enum class DitherColorSpace
     YCrCb
 };
 
-/*
-bool Dither(
-            EDitherType eType,
-            EDitherColorSpace eColorSpace,
-            size_t cAvailableColors,
-            const Gdiplus::ARGB *pargbAvailableColors,
-            UINT *pcTimesUsed,
-            Gdiplus::Bitmap &bmp);
-
- */
+void Dither(
+    DitherType type,
+    DitherColorSpace colorSpace,
+    const std::vector<Triple<uint8_t>> &rgbPalette,
+    uint8_t *pixels,
+    int width,
+    int height,
+    int stride);
 
 #endif /* Dither_hpp */

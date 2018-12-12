@@ -9,85 +9,13 @@
 #include "Dither.hpp"
 
 #include "ColorConversions.hpp"
+#include "Triple.hpp"
 
 #include <algorithm>
 #include <cassert>
-#include <tuple>
 #include <vector>
 
 using namespace std;
-
-template <typename T> class Triple : public tuple<T, T, T>
-{
-public:
-    Triple() = default;
-    Triple(T a, T b, T c);
-
-    Triple& operator+=(const Triple& other);
-    //Triple& operator-=(const Triple& other);
-    //Triple& operator*=(const Triple& other);
-    //Triple& operator/=(const Triple& other);
-    
-    //Triple operator+(const Triple& other) const;
-    Triple operator-(const Triple& other) const;
-    //Triple operator*(const Triple& other) const;
-    //Triple operator/(const Triple& other) const;
-    
-    template <typename U> Triple operator+(U other) const;
-    template <typename U> Triple operator-(U other) const;
-    template <typename U> Triple operator*(U other) const;
-    template <typename U> Triple operator/(U other) const;
-
-};
-
-template <typename T> Triple<T>::Triple(T a, T b, T c) : tuple<T, T, T>(a, b, c)
-{
-}
-
-template <typename T> Triple<T>& Triple<T>::operator+=(const Triple &other)
-{
-    get<0>(*this) += get<0>(other);
-    get<1>(*this) += get<1>(other);
-    get<2>(*this) += get<2>(other);
-    return *this;
-}
-
-template <typename T> Triple<T> Triple<T>::operator-(const Triple& other) const
-{
-    return Triple(get<0>(*this) - get<0>(other),
-                  get<1>(*this) - get<1>(other),
-                  get<2>(*this) - get<2>(other));
-}
-
-template <typename T> template <typename U> Triple<T> Triple<T>::operator+(U other) const
-{
-    return Triple(get<0>(*this) + other,
-                  get<1>(*this) + other,
-                  get<1>(*this) + other);
-}
-
-template <typename T> template <typename U> Triple<T> Triple<T>::operator-(U other) const
-{
-    return Triple(get<0>(*this) - other,
-                  get<1>(*this) - other,
-                  get<1>(*this) - other);
-}
-
-template <typename T> template <typename U> Triple<T> Triple<T>::operator*(U other) const
-{
-    return Triple(get<0>(*this) * other,
-                  get<1>(*this) * other,
-                  get<1>(*this) * other);
-}
-
-template <typename T> template <typename U> Triple<T> Triple<T>::operator/(U other) const
-{
-    return Triple(get<0>(*this) / other,
-                  get<1>(*this) / other,
-                  get<1>(*this) / other);
-}
-
-//using Triple = tuple<int, int, int>;
 
 // Various dither types...
 
@@ -275,8 +203,11 @@ void Dither(
                         {
                             // Add weighted error for pixel (x', y') ro running total
                             int weight = dither.weights[c + r * dither.cols];
-                            // TODO!! 42 should be some math with r
-                            errorAccumulator += errors[errorRowIndex + 42][xx] * weight;
+
+                            // errors[errorRowIndex][x] is meant for the current outer
+                            // pixel, i.e. when r == R - 1. And the oldest error (r == 0)
+                            // is the next error row: errors[errorRowIndex + 1].
+                            errorAccumulator += errors[(errorRowIndex + r + 1) % dither.rows][xx] * weight;
                             errorDenominator += weight;
                         }
                     }
