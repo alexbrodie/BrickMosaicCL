@@ -36,9 +36,11 @@ let context = CIContext(options: nil)
 //let cgImage = context.createCGImage(ciImage!, from: extent, format: pixelFormat, colorSpace: nil, deferred: false)
 context.render(ciImage!, toBitmap: buffer, rowBytes: stride, bounds: extent, format: pixelFormat, colorSpace: nil)
 
+let engine = makeEngine()
 
+dither(engine)
+
+freeEngine(engine)
 
 //let context = CIContext(options: [workingColorSpace])
 puts("Fin!\n")
-
-buffer
