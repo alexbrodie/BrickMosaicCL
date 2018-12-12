@@ -15,6 +15,8 @@
 void* makeEngine();
 void freeEngine(void* engine);
 
+void setDitherType(void* engine, const char* type);
+void setDitherColorSpace(void* engine, const char* colorSpace);
 void process(void* engine, void* buffer, int width, int height, int stride);
 
 

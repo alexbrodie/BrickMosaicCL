@@ -11,6 +11,8 @@
 
 #include <vector>
 
+enum class DitherType;
+enum class DitherColorSpace;
 template <typename T> class Triple;
 
 
@@ -21,11 +23,16 @@ public:
     Engine();
     virtual ~Engine();
     
+    void setDitherType(const char* type);
+    void setDitherColorSpace(const char* colorSpace);
+
     void Process(uint8_t* buffer, int width, int height, int stride);
     
 private:
     
-    std::vector<Triple<uint8_t>> palette;
+    DitherType _ditherType;
+    DitherColorSpace _ditherColorSpace;
+    std::vector<Triple<uint8_t>> _palette;
     
 };
 

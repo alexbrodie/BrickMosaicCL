@@ -69,13 +69,15 @@ constexpr ColorInfo colors[] =
 */
 };
 
-Engine::Engine()
+Engine::Engine() :
+    _ditherType(DitherType::None),
+    _ditherColorSpace(DitherColorSpace::RGB)
 {
     //palette = { { 0, 0, 0 }, { 64, 64, 64 }, { 128, 128, 128 }, { 196, 196, 196 }, { 255, 255, 255 }};
     
     for (auto&& color : colors)
     {
-        palette.push_back(color.rgb);
+        _palette.push_back(color.rgb);
     }
 }
 
@@ -83,11 +85,39 @@ Engine::~Engine()
 {
 }
 
+void Engine::setDitherType(const char* type)
+{
+    
+}
+
+void Engine::setDitherColorSpace(const char* colorSpace)
+{
+    static constexpr struct { const char* name; DitherColorSpace value; } colorSpaces[] =
+    {
+        { "RGB", DitherColorSpace::RGB },
+    };
+    
+    auto found = std::find_if(std::begin(colorSpaces), std::end(colorSpaces),
+        [colorSpace](const auto& test)
+        {
+            return strcmp(test.name, colorSpace) == 0;
+        });
+    
+    if (found != std::end(colorSpaces))
+    {
+        _ditherColorSpace = found->value;
+    }
+    else
+    {
+        throw std::invalid_argument("invalid value for 'colorSpace' in call to Engine::setColorSpace");
+    }
+}
+
 void Engine::Process(uint8_t* buffer, int width, int height, int stride)
 {
-    Dither(DitherType::FloydSteinberg,
-           DitherColorSpace::LinearRGB,
-           palette,
+    Dither(_ditherType,
+           _ditherColorSpace,
+           _palette,
            buffer,
            width,
            height,
@@ -105,7 +135,17 @@ extern "C" {
     {
         delete reinterpret_cast<Engine*>(engine);
     }
+
+    void setDitherType(void* engine, const char* type)
+    {
+        reinterpret_cast<Engine*>(engine)->setDitherType(type);
+    }
     
+    void setDitherColorSpace(void* engine, const char* colorSpace)
+    {
+        reinterpret_cast<Engine*>(engine)->setDitherType(colorSpace);
+    }
+
     void process(void *engine, void* buffer, int width, int height, int stride)
     {
         reinterpret_cast<Engine*>(engine)->Process(reinterpret_cast<uint8_t*>(buffer), width, height, stride);
