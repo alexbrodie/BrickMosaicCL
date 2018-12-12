@@ -11,7 +11,8 @@
 
 #include <vector>
 
-#include "Triple.hpp"
+template <typename T> class Triple;
+
 
 class Engine
 {

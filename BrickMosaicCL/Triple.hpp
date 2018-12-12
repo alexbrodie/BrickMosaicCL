@@ -14,8 +14,8 @@
 template <typename T> class Triple : public std::tuple<T, T, T>
 {
 public:
-    Triple() = default;
-    Triple(T a, T b, T c);
+    constexpr Triple() = default;
+    constexpr Triple(T a, T b, T c);
     
     Triple& operator+=(const Triple& other);
     //Triple& operator-=(const Triple& other);
@@ -34,7 +34,7 @@ public:
     
 };
 
-template <typename T> Triple<T>::Triple(T a, T b, T c) : std::tuple<T, T, T>(a, b, c)
+template <typename T> constexpr Triple<T>::Triple(T a, T b, T c) : std::tuple<T, T, T>(a, b, c)
 {
 }
 
