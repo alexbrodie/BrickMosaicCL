@@ -223,7 +223,7 @@ void Dither(
             else
             {
                 // Isn't this only true for the first pixel!?
-                assert(x == 0 && y == 0);
+                assert((x == 0 && y == 0) || (type == DitherType::None));
             }
             
             // See what value in the provided colors is closest to this value
