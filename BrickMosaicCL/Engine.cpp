@@ -21,3 +21,22 @@ void Engine::Dither()
 {
     delete new int;
 }
+
+extern "C" {
+    
+    void* makeEngine()
+    {
+        return reinterpret_cast<void*>(new Engine());
+    }
+    
+    void freeEngine(void* engine)
+    {
+        delete reinterpret_cast<Engine*>(engine);
+    }
+    
+    void dither(void* engine)
+    {
+        reinterpret_cast<Engine*>(engine)->Dither();
+    }
+    
+}

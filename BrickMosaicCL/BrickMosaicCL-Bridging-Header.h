@@ -10,6 +10,12 @@
 #define BrickMosaicCL_Bridging_Header_h
 
 // #import Objective-C classes and #include C files here:
-#import "EngineC.h"
+
+
+void* makeEngine();
+void freeEngine(void* engine);
+
+void dither(void* engine);
+
 
 #endif /* BrickMosaicCL_Bridging_Header_h */

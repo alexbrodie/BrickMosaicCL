@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		DB47F1BE21C0CD1C00CEC7F5 /* Engine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB47F1BC21C0CD1C00CEC7F5 /* Engine.cpp */; };
-		DB47F1C421C0CEC400CEC7F5 /* EngineC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB47F1C221C0CEC400CEC7F5 /* EngineC.cpp */; };
 		DBE8D6D821ABB985002AD956 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE8D6D721ABB985002AD956 /* main.swift */; };
 		DBE8D6E021ABE54A002AD956 /* ColorConversions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DBE8D6DE21ABE54A002AD956 /* ColorConversions.cpp */; };
 		DBE8D6E321AD11B7002AD956 /* Dither.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DBE8D6E121AD11B7002AD956 /* Dither.cpp */; };
@@ -31,8 +30,6 @@
 		DB47F1B921C0C9BC00CEC7F5 /* BrickMosaicCL-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "BrickMosaicCL-Bridging-Header.h"; sourceTree = "<group>"; };
 		DB47F1BC21C0CD1C00CEC7F5 /* Engine.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Engine.cpp; sourceTree = "<group>"; };
 		DB47F1BD21C0CD1C00CEC7F5 /* Engine.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Engine.hpp; sourceTree = "<group>"; };
-		DB47F1C221C0CEC400CEC7F5 /* EngineC.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = EngineC.cpp; sourceTree = "<group>"; };
-		DB47F1C321C0CEC400CEC7F5 /* EngineC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EngineC.h; sourceTree = "<group>"; };
 		DBE8D6D421ABB985002AD956 /* BrickMosaicCL */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = BrickMosaicCL; sourceTree = BUILT_PRODUCTS_DIR; };
 		DBE8D6D721ABB985002AD956 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		DBE8D6DE21ABE54A002AD956 /* ColorConversions.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ColorConversions.cpp; sourceTree = "<group>"; };
@@ -80,8 +77,6 @@
 				DB47F1B921C0C9BC00CEC7F5 /* BrickMosaicCL-Bridging-Header.h */,
 				DB47F1BC21C0CD1C00CEC7F5 /* Engine.cpp */,
 				DB47F1BD21C0CD1C00CEC7F5 /* Engine.hpp */,
-				DB47F1C221C0CEC400CEC7F5 /* EngineC.cpp */,
-				DB47F1C321C0CEC400CEC7F5 /* EngineC.h */,
 			);
 			path = BrickMosaicCL;
 			sourceTree = "<group>";
@@ -145,7 +140,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				DBE8D6D821ABB985002AD956 /* main.swift in Sources */,
-				DB47F1C421C0CEC400CEC7F5 /* EngineC.cpp in Sources */,
 				DBE8D6E021ABE54A002AD956 /* ColorConversions.cpp in Sources */,
 				DBE8D6E321AD11B7002AD956 /* Dither.cpp in Sources */,
 				DB47F1BE21C0CD1C00CEC7F5 /* Engine.cpp in Sources */,
