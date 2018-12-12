@@ -48,6 +48,11 @@ let context = CIContext(options: nil)
 try context.writePNGRepresentation(of: ciImage!, to: URL(fileURLWithPath: imagePath + "~scaled.png"),
                                    format: CIFormat.ARGB8, colorSpace: colorSpace)
 
+// For each permutation...
+
+let ditherType = "FS"
+let ditherColorSpace = "RGB"
+
 // Define the buffer size and type
 let pixelFormat = CIFormat.ARGB8
 let stride: Int = width * 4
@@ -58,21 +63,20 @@ let buffer = UnsafeMutableRawPointer.allocate(byteCount: bufferLength, alignment
 //let cgImage = context.createCGImage(ciImage!, from: extent, format: pixelFormat, colorSpace: nil, deferred: false)
 context.render(ciImage!, toBitmap: buffer, rowBytes: stride, bounds: extent, format: pixelFormat, colorSpace: nil)
 
+// Dither-process it
 let engine = makeEngine()
-
-setDitherColorSpace(engine, "RGB")
-setDitherType(engine, "FS")
-
+setDitherType(engine, ditherType)
+setDitherColorSpace(engine, ditherColorSpace)
 process(engine, buffer, Int32(width), Int32(height), Int32(stride))
-
 freeEngine(engine)
 
-
-ciImage = CIImage(bitmapData: Data(bytesNoCopy: buffer, count: bufferLength, deallocator: Data.Deallocator.none),
+// Create result image
+let finalImage = CIImage(bitmapData: Data(bytesNoCopy: buffer, count: bufferLength, deallocator: Data.Deallocator.none),
                                     bytesPerRow: stride, size: CGSize(width: width, height: height),
                                     format: pixelFormat, colorSpace: colorSpace)
 
-try context.writePNGRepresentation(of: ciImage!, to: URL(fileURLWithPath: imagePath + "~output.png"),
+// Save that to disk
+try context.writePNGRepresentation(of: finalImage, to: URL(fileURLWithPath: imagePath + "~output-\(ditherType)-\(ditherColorSpace).png"),
                                    format: CIFormat.ARGB8, colorSpace: colorSpace)
 
 puts("Fin!\n")

@@ -87,7 +87,25 @@ Engine::~Engine()
 
 void Engine::setDitherType(const char* type)
 {
+    static constexpr struct { const char* name; DitherType value; } types[] =
+    {
+        { "FS", DitherType::FloydSteinberg },
+    };
     
+    auto found = std::find_if(std::begin(types), std::end(types),
+        [type](const auto& test)
+        {
+            return strcmp(test.name, type) == 0;
+        });
+
+    if (found != std::end(types))
+    {
+        _ditherType = found->value;
+    }
+    else
+    {
+        throw std::invalid_argument("invalid value for 'type' in call to Engine::setDitherType");
+    }
 }
 
 void Engine::setDitherColorSpace(const char* colorSpace)
@@ -109,7 +127,7 @@ void Engine::setDitherColorSpace(const char* colorSpace)
     }
     else
     {
-        throw std::invalid_argument("invalid value for 'colorSpace' in call to Engine::setColorSpace");
+        throw std::invalid_argument("invalid value for 'colorSpace' in call to Engine::setDitherColorSpace");
     }
 }
 
@@ -143,7 +161,7 @@ extern "C" {
     
     void setDitherColorSpace(void* engine, const char* colorSpace)
     {
-        reinterpret_cast<Engine*>(engine)->setDitherType(colorSpace);
+        reinterpret_cast<Engine*>(engine)->setDitherColorSpace(colorSpace);
     }
 
     void process(void *engine, void* buffer, int width, int height, int stride)
