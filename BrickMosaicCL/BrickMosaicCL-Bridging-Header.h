@@ -15,7 +15,7 @@
 void* makeEngine();
 void freeEngine(void* engine);
 
-void dither(void* engine);
+void process(void* engine, void* buffer, int width, int height, int stride);
 
 
 #endif /* BrickMosaicCL_Bridging_Header_h */

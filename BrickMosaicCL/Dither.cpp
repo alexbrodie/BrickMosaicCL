@@ -143,7 +143,6 @@ void Dither(
     int height,
     int stride)
 {
-    
     // Local copy because we access this a lot
     const DitherDefinition dither = *ditherTypeToDefinition[static_cast<int>(type)];
     
@@ -178,10 +177,12 @@ void Dither(
         //!! Gdiplus::ARGB *pargbRow = reinterpret_cast<Gdiplus::ARGB*>(static_cast<BYTE*>(bd.Scan0) + (bd.Stride * y));
         for (int x = 0; x < width; ++x)
         {
-            int pixelBufferIndex = y * stride + x * 3;
-            uint8_t& rr = pixels[pixelBufferIndex + 0];
-            uint8_t& gg = pixels[pixelBufferIndex + 1];
-            uint8_t& bb = pixels[pixelBufferIndex + 2];
+            // Pixels are ARGB format
+            int pixelBufferIndex = y * stride + x * 4;
+            //uint8_t& aa = pixels[pixelBufferIndex + 0];
+            uint8_t& rr = pixels[pixelBufferIndex + 1];
+            uint8_t& gg = pixels[pixelBufferIndex + 2];
+            uint8_t& bb = pixels[pixelBufferIndex + 3];
 
             // Convert pixel RGB to target color space
             Triple<int> color = ConvertRgbToColorSpace(colorSpace, rr, gg, bb);
@@ -215,7 +216,15 @@ void Dither(
             }
             
             // Add the weighted error average to the current pixel color
-            color += errorAccumulator / errorDenominator;
+            if (errorDenominator > 0)
+            {
+                color += errorAccumulator / errorDenominator;
+            }
+            else
+            {
+                // Isn't this only true for the first pixel!?
+                assert(x == 0 && y == 0);
+            }
             
             // See what value in the provided colors is closest to this value
             size_t paletteIndexWithMinError = 0;
@@ -257,7 +266,7 @@ void Dither(
     }
 }
 
-#if 1
+#if 0
 static struct Test
 {
     Test()

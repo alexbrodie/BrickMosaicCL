@@ -9,15 +9,22 @@
 #ifndef Engine_hpp
 #define Engine_hpp
 
+#include <vector>
+
+#include "Triple.hpp"
+
 class Engine
 {
 public:
+    
     Engine();
     virtual ~Engine();
     
-    void Dither();
+    void Process(uint8_t* buffer, int width, int height, int stride);
     
 private:
+    
+    std::vector<Triple<uint8_t>> palette;
     
 };
 
