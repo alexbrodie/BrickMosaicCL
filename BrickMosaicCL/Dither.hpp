@@ -28,7 +28,7 @@ enum class DitherColorSpace
     YIQ,
     XYZ,
     LAB,
-    YCrCb
+    YCrCb // this seems broken?
 };
 
 void Dither(

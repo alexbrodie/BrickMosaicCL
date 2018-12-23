@@ -70,7 +70,7 @@ constexpr ColorInfo colors[] =
 };
 
 Engine::Engine() :
-    _ditherType(DitherType::None),
+    _ditherType(DitherType::FloydSteinberg),
     _ditherColorSpace(DitherColorSpace::RGB)
 {
     //palette = { { 0, 0, 0 }, { 64, 64, 64 }, { 128, 128, 128 }, { 196, 196, 196 }, { 255, 255, 255 }};
@@ -89,7 +89,10 @@ void Engine::setDitherType(const char* type)
 {
     static constexpr struct { const char* name; DitherType value; } types[] =
     {
+        { "", DitherType::None },
         { "FS", DitherType::FloydSteinberg },
+        { "JJN", DitherType::JarvisJudiceNinke },
+        { "Stuki", DitherType::Stuki },
     };
     
     auto found = std::find_if(std::begin(types), std::end(types),
@@ -113,6 +116,11 @@ void Engine::setDitherColorSpace(const char* colorSpace)
     static constexpr struct { const char* name; DitherColorSpace value; } colorSpaces[] =
     {
         { "RGB", DitherColorSpace::RGB },
+        { "LinearRGB", DitherColorSpace::LinearRGB },
+        { "YIQ", DitherColorSpace::YIQ },
+        { "XYZ", DitherColorSpace::XYZ },
+        { "LAB", DitherColorSpace::LAB },
+        { "YCrCb", DitherColorSpace::YCrCb },
     };
     
     auto found = std::find_if(std::begin(colorSpaces), std::end(colorSpaces),
@@ -133,13 +141,8 @@ void Engine::setDitherColorSpace(const char* colorSpace)
 
 void Engine::Process(uint8_t* buffer, int width, int height, int stride)
 {
-    Dither(_ditherType,
-           _ditherColorSpace,
-           _palette,
-           buffer,
-           width,
-           height,
-           stride);
+    Dither(_ditherType, _ditherColorSpace, _palette,
+           buffer, width, height, stride);
 }
 
 extern "C" {

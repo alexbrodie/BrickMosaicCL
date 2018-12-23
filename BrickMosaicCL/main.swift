@@ -15,60 +15,90 @@ if (CommandLine.argc != 2) {
     exit(1)
 }
 
-// Load CIImage
-let imagePath = CommandLine.arguments[1]
-var ciImage = CIImage(contentsOf: URL(fileURLWithPath: imagePath))
-if (ciImage == nil) {
-    fputs("Couldn't load '\(imagePath)'\n", stderr)
-    exit(1)
+func loadImage(path: String) -> CIImage {
+    let image = CIImage(contentsOf: URL(fileURLWithPath: path))
+    if (image == nil) {
+        fputs("Couldn't load '\(path)'\n", stderr)
+        exit(1)
+    }
+    
+    return image!
 }
 
-var extent: CGRect = ciImage!.extent
-var width: Int = Int(extent.width)
-var height: Int  = Int(extent.height)
+func saveImage(image: CIImage, path: String) throws {
+    let colorSpace: CGColorSpace = CGColorSpace(name: CGColorSpace.sRGB)!
+    let context = CIContext(options: nil)
+    
+    try context.writePNGRepresentation(
+        of: image,
+        to: URL(fileURLWithPath: path),
+        format: CIFormat.ARGB8,
+        colorSpace: colorSpace)
+}
 
-// Constrain to a max dimension
+// Load CIImage
+let imagePath = CommandLine.arguments[1]
+var ciImage = loadImage(path: imagePath)
+
+func scaleTo(image: CIImage, maxDim: Int) -> CIImage {
+    let extent: CGRect = image.extent
+    let width: Int = Int(extent.size.width)
+    let height: Int = Int(extent.size.height)
+    
+    let scale = CGFloat(maxDim) / CGFloat(max(width, height))
+
+    //ciImage = ciImage!.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
+
+    let filter = CIFilter(name: "CILanczosScaleTransform")!
+    filter.setValue(ciImage, forKey: "inputImage")
+    filter.setValue(scale, forKey: "inputScale")
+    filter.setValue(1.0, forKey: "inputAspectRatio")
+    return filter.value(forKey: "outputImage") as! CIImage
+}
+
 // 100x100 LEGO studs is roughly $60 and 2.6 x 2.6 ft.
-let maxDim: Int = 100
-let scale = CGFloat(maxDim) / CGFloat(max(width, height))
-//ciImage = ciImage!.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
-let filter = CIFilter(name: "CILanczosScaleTransform")!
-filter.setValue(ciImage, forKey: "inputImage")
-filter.setValue(scale, forKey: "inputScale")
-filter.setValue(1.0, forKey: "inputAspectRatio")
-ciImage = filter.value(forKey: "outputImage") as? CIImage
+ciImage = scaleTo(image: ciImage, maxDim: 100)
+try saveImage(image: ciImage, path: imagePath + "~1-scaled.png")
 
-extent = ciImage!.extent
-width = Int(extent.width)
-height  = Int(extent.height)
+// Sharpen
+func sharpen(image: CIImage) -> CIImage {
+    let filter = CIFilter(name: "CIUnsharpMask")!
+    filter.setValue(ciImage, forKey: "inputImage")
+    filter.setValue(1.0, forKey: "inputRadius")
+    filter.setValue(0.5, forKey: "inputIntensity")
+    return filter.value(forKey: "outputImage") as! CIImage
+}
+
+ciImage = sharpen(image: ciImage)
+try saveImage(image: ciImage, path: imagePath + "~2-sharpened.png")
 
 let colorSpace: CGColorSpace = CGColorSpace(name: CGColorSpace.sRGB)!
 let context = CIContext(options: nil)
 
-try context.writePNGRepresentation(of: ciImage!, to: URL(fileURLWithPath: imagePath + "~scaled.png"),
-                                   format: CIFormat.ARGB8, colorSpace: colorSpace)
-
-// For each permutation...
-
-let ditherType = "FS"
-let ditherColorSpace = "RGB"
-
 // Define the buffer size and type
+let extent = ciImage.extent
+let width: Int = Int(extent.width)
+let height: Int = Int(extent.height)
 let pixelFormat = CIFormat.ARGB8
 let stride: Int = width * 4
 let bufferLength: Int = stride * height
 let buffer = UnsafeMutableRawPointer.allocate(byteCount: bufferLength, alignment: 4)
 
-// Render that
+let engine = makeEngine()
+
+// For each permutation...
+//let ditherType = "FS"
+for ditherColorSpace in ["RGB", "LinearRGB", "YIQ", "XYZ", "LAB", "YCrCb"] {
+for ditherType in ["", "FS", "JJN", "Stuki"] {
+        
+// Render the target
 //let cgImage = context.createCGImage(ciImage!, from: extent, format: pixelFormat, colorSpace: nil, deferred: false)
-context.render(ciImage!, toBitmap: buffer, rowBytes: stride, bounds: extent, format: pixelFormat, colorSpace: nil)
+context.render(ciImage, toBitmap: buffer, rowBytes: stride, bounds: extent, format: pixelFormat, colorSpace: nil)
 
 // Dither-process it
-let engine = makeEngine()
 setDitherType(engine, ditherType)
 setDitherColorSpace(engine, ditherColorSpace)
 process(engine, buffer, Int32(width), Int32(height), Int32(stride))
-freeEngine(engine)
 
 // Create result image
 let finalImage = CIImage(bitmapData: Data(bytesNoCopy: buffer, count: bufferLength, deallocator: Data.Deallocator.none),
@@ -78,5 +108,11 @@ let finalImage = CIImage(bitmapData: Data(bytesNoCopy: buffer, count: bufferLeng
 // Save that to disk
 try context.writePNGRepresentation(of: finalImage, to: URL(fileURLWithPath: imagePath + "~output-\(ditherType)-\(ditherColorSpace).png"),
                                    format: CIFormat.ARGB8, colorSpace: colorSpace)
+
+
+}
+}
+
+freeEngine(engine)
 
 puts("Fin!\n")

@@ -15,8 +15,12 @@
 void* makeEngine();
 void freeEngine(void* engine);
 
+// One of ["", "FS", "JJN", "Stuki"]
 void setDitherType(void* engine, const char* type);
+// One of ["RGB", "LinearRGB", "YIQ", "XYZ", "LAB", "YCrCb"]
 void setDitherColorSpace(void* engine, const char* colorSpace);
+
+// Assumes ARGB format
 void process(void* engine, void* buffer, int width, int height, int stride);
 
 
