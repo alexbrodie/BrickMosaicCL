@@ -26,7 +26,7 @@ public:
     void setDitherType(const char* type);
     void setDitherColorSpace(const char* colorSpace);
 
-    void Process(uint8_t* buffer, int width, int height, int stride);
+    void process(uint8_t* buffer, int width, int height, int stride);
     
 private:
     

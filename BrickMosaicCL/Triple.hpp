@@ -18,14 +18,14 @@ public:
     constexpr Triple(T a, T b, T c);
     
     Triple& operator+=(const Triple& other);
-    //Triple& operator-=(const Triple& other);
-    //Triple& operator*=(const Triple& other);
-    //Triple& operator/=(const Triple& other);
+    Triple& operator-=(const Triple& other);
+    Triple& operator*=(const Triple& other);
+    Triple& operator/=(const Triple& other);
     
-    //Triple operator+(const Triple& other) const;
+    Triple operator+(const Triple& other) const;
     Triple operator-(const Triple& other) const;
-    //Triple operator*(const Triple& other) const;
-    //Triple operator/(const Triple& other) const;
+    Triple operator*(const Triple& other) const;
+    Triple operator/(const Triple& other) const;
     
     template <typename U> Triple operator+(U other) const;
     template <typename U> Triple operator-(U other) const;

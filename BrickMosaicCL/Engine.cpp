@@ -169,7 +169,7 @@ extern "C" {
 
     void process(void *engine, void* buffer, int width, int height, int stride)
     {
-        reinterpret_cast<Engine*>(engine)->Process(reinterpret_cast<uint8_t*>(buffer), width, height, stride);
+        reinterpret_cast<Engine*>(engine)->process(reinterpret_cast<uint8_t*>(buffer), width, height, stride);
     }
     
 }
